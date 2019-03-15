@@ -70,6 +70,7 @@ class CommandMessage(BaseMessage):
         self._fetch_plan = '*:0'
         self._command_type = QUERY_SYNC
         self._mod_byte = 's'
+        self._prepared_params = None
 
         self._append( ( FIELD_BYTE, COMMAND_OP ) )
 
@@ -99,8 +100,7 @@ class CommandMessage(BaseMessage):
             self._mod_byte = 's'
         else:
             if self._callback is None:
-                raise PyOrientBadMethodCallException( "No callback was "
-                                                                  "provided.",[])
+                raise PyOrientBadMethodCallException( "No callback was provided.", [])
             self._mod_byte = 'a'
 
         _payload_definition = [
@@ -124,7 +124,10 @@ class CommandMessage(BaseMessage):
         if self._command_type == QUERY_SCRIPT:
             _payload_definition.insert( 1, ( FIELD_STRING, 'sql' ) )
 
-        _payload_definition.append( ( FIELD_INT, 0 ) )
+        if self._prepared_params:
+            _payload_definition.append((FIELD_STRING, self._prepared_params))
+
+        _payload_definition.append((FIELD_INT, 0))
 
         payload = b''.join(
             self._encode_field( x ) for x in _payload_definition
@@ -134,6 +137,15 @@ class CommandMessage(BaseMessage):
         self._append( ( FIELD_STRING, payload ) )
 
         return super( CommandMessage, self ).prepare()
+
+    def prepare_parametric_query(self, params):
+        sql_params = params[2]
+        params_list = []
+        for i in range(len(sql_params)):
+            params_list.append(str(i) + ':' + str(sql_params[i]) + ',')
+        prepared_params_value = ''.join(params_list)[:-1]
+        self._prepared_params = 'params:{' + prepared_params_value + '}'
+        return self.prepare(params[0:2] + params[3:])
 
     def fetch_response(self):
 

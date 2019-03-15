@@ -47,6 +47,49 @@ class GraphUsageTestCase(unittest.TestCase):
         assert 'specie' in animal
         assert 'name' in animal
 
+        # add data for tests
+
+        self.client.command("insert into Animal set name = 'capybara', specie = 'rodent'")
+        self.client.command("insert into Animal set name = 'chipmunk', specie = 'rodent'")
+        self.client.command("insert into Animal set name = 'wolf', specie = 'canis'")
+        self.client.command("insert into Animal set name = 'coyote', specie = 'canis'")
+
+        # parameterized query
+
+        sql = "select * from animal where name = ? or name = ?"
+
+        params = ['rat', 'chipmunk']
+        animals = self.client.query_parameterized(sql, params)
+        assert len(animals) == 2
+        params = ['capybara', 'chipmunk']
+        animals = self.client.query_parameterized(sql, params)
+        assert len(animals) == 2
+        params = ['squirrel', 'hamster']
+        animals = self.client.query_parameterized(sql, params)
+        assert len(animals) == 0
+        params = ['capybara']
+        animals = self.client.query_parameterized(sql, params)
+        assert len(animals) == 1
+        params = []
+        animals = self.client.query_parameterized(sql, params)
+        assert len(animals) == 0
+
+        sql = "select * from animal where specie = ?"
+
+        params = ['canis']
+        animals = self.client.query_parameterized(sql, params)
+        assert len(animals) == 2
+
+        animals = self.client.query_parameterized(sql, params, 1)
+        assert len(animals) == 1
+
+        sql = "select * from animal where name = ? and specie = ?"
+
+        params = ['wolf', 'canis']
+        animals = self.client.query_parameterized(sql, params)
+        assert len(animals) == 1
+
+
         # Create the vertex and insert the food values
 
         self.client.command('create class Food extends V')

@@ -125,6 +125,13 @@ client.record_load( rec_position._rid, "*:-1", _my_callback )
 result = client.query("select from my_class", 10, '*:0')
 ```
 
+### Make a parameterized query
+```python
+sql = "select * from my_class where id = ? or id = ? "
+params = [1,2]
+result = client.query_parameterized(sql, params, 10, '*:0')
+```
+
 ### Make an Async query
 ```python
 def _my_callback(for_every_record):

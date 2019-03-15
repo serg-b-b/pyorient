@@ -422,6 +422,11 @@ class OrientDB(object):
         return self.get_message("CommandMessage") \
             .prepare(( QUERY_ASYNC, ) + args).send().fetch_response()
 
+    def query_parameterized(self, *args):
+        return self.get_message("CommandMessage") \
+            .prepare_parametric_query(( QUERY_SYNC, ) + args).send()\
+            .fetch_response()
+
     def data_cluster_add(self, *args):
         return self.get_message("DataClusterAddMessage") \
             .prepare(args).send().fetch_response()
